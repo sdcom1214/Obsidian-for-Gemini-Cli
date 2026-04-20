@@ -1,0 +1,6 @@
+# 인코딩 및 줄바꿈 고정 설정
+* text=auto eol=lf
+*.md text eol=lf working-tree-encoding=UTF-8
+*.js text eol=lf working-tree-encoding=UTF-8
+*.json text eol=lf working-tree-encoding=UTF-8
+*.ps1 text eol=crlf
