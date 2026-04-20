@@ -1,18 +1,18 @@
-# ğŸš€ Fast Obsidian MCP Server
+# ?? Fast Obsidian MCP Server
 
-[ğŸ‡°ğŸ‡· í•œêµ­ì–´ ë¬¸ì„œ(Korean Guide)](./README_KR.md)
+[?‡°?‡· ?œêµ­??ë¬¸ì„œ(Korean Guide)](./README_KR.md)
 
 A high-performance, **zero-dependency** Model Context Protocol (MCP) server for Obsidian. This tool allows AI models (like Claude, Gemini, etc.) to interact directly with your local Obsidian vault.
 
-## âœ¨ Key Features
+## ??Key Features
 
-- âš¡ **Zero-Dependency**: No `npm install` required for runtime. Pure Node.js.
-- ğŸš€ **High Performance**: Parallel file system operations for instant search/read.
-- ğŸ“… **Smart Organization**: Automatically organizes notes by date (`YYYY-MM-DD/Title_Date.md`).
-- â˜ï¸ **Cloud Sync**: Built-in support for Google Drive synchronization via Rclone.
-- ğŸ”’ **Secure**: Path validation to ensure AI stays within your vault.
+- ??**Zero-Dependency**: No `npm install` required for runtime. Pure Node.js.
+- ?? **High Performance**: Parallel file system operations for instant search/read.
+- ?“… **Smart Organization**: Automatically organizes notes by date (`YYYY-MM-DD/Title_Date.md`).
+- ?ï¸ **Cloud Sync**: Built-in support for Google Drive synchronization via Rclone.
+- ?”’ **Secure**: Path validation to ensure AI stays within your vault.
 
-## ğŸ› ï¸ Installation
+## ?› ï¸?Installation
 
 ### 1. Prerequisites
 - [Node.js](https://nodejs.org/) (v16 or higher)
@@ -25,7 +25,7 @@ git clone https://github.com/sdcom1214/Obsidian-for-Gemini-Cli.git
 cd Obsidian-for-Gemini-Cli
 ```
 
-## âš™ï¸ Configuration
+## ?™ï¸ Configuration
 
 Add the following to your MCP client config (e.g., `claude_desktop_config.json`):
 
@@ -43,7 +43,7 @@ Add the following to your MCP client config (e.g., `claude_desktop_config.json`)
 }
 ```
 
-## ğŸ“‚ Tools Provided
+## ?“‚ Tools Provided
 
 | Tool | Description |
 | :--- | :--- |
@@ -52,13 +52,13 @@ Add the following to your MCP client config (e.g., `claude_desktop_config.json`)
 | `write_note` | Creates or updates a note with date-based folder. |
 | `search_notes` | Blazing fast parallel search across the entire vault. |
 
-## âš¡ Quick Install via Gemini CLI (Magic Prompt)
+## ??Quick Install via Gemini CLI (Magic Prompt)
 
 Just copy and paste the prompt below into your **Gemini CLI**. It will automatically set up the entire project for you!
 
-> **"Hey Gemini, install the 'Fast Obsidian MCP' server for me. Create all files in `C:\Users\%USERNAME%\fast-obsidian-mcp`, and register it as 'obsidian' in my `.gemini/settings.json`. My vault path is `C:\Gemini Project`."**
+> **"Hey Gemini, install the 'Fast Obsidian MCP' server for me. Clone `https://github.com/sdcom1214/Obsidian-for-Gemini-Cli.git` into `C:\Users\%USERNAME%\fast-obsidian-mcp` and register it as 'obsidian' in my `.gemini/settings.json`. My vault path is `C:\Gemini Project`."**
 
-## â˜ï¸ Google Drive Sync
+## ?ï¸ Google Drive Sync
 
 To sync your vault with Google Drive:
 1. Configure rclone with `rclone config` (name it `gdrive`).
@@ -67,8 +67,8 @@ To sync your vault with Google Drive:
 npm run sync
 ```
 
-## ğŸ“„ License
+## ?“„ License
 MIT License. Feel free to use and contribute!
 
 ---
-Developed by **ì•ˆí˜¸ì˜ (An Ho Yong)**
+Developed by **?ˆí˜¸??(An Ho Yong)**
