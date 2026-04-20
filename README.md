@@ -1,5 +1,7 @@
 # 🚀 Fast Obsidian MCP Server
 
+[🇰🇷 한국어 문서(Korean Guide)](./README_KR.md)
+
 A high-performance, **zero-dependency** Model Context Protocol (MCP) server for Obsidian. This tool allows AI models (like Claude, Gemini, etc.) to interact directly with your local Obsidian vault.
 
 ## ✨ Key Features
