@@ -3,11 +3,6 @@
  * 
  * A high-performance, zero-dependency MCP server for Obsidian Vault.
  * Provides tools for listing, reading, searching, and writing notes.
- * 
- * Features:
- * - Zero external dependencies (Pure Node.js)
- * - Parallel file system operations for performance
- * - Date-based folder & file organization (Standardized)
  */
 
 const fs = require('fs').promises;
@@ -27,7 +22,6 @@ const log = (msg) => console.error(`[Obsidian-MCP] ${msg}`);
 rl.on('line', async (line) => {
   try {
     const { method, params, id } = JSON.parse(line);
-
     switch (method) {
       case 'initialize':
         return send(id, { 
@@ -35,24 +29,20 @@ rl.on('line', async (line) => {
           capabilities: { tools: {} }, 
           serverInfo: { name: 'fast-obsidian-mcp', version: '1.0.0' } 
         });
-
       case 'notifications/initialized': return;
-
       case 'tools/list':
         return send(id, {
           tools: [
-            { name: 'list_notes', description: 'List all markdown notes in the vault.', inputSchema: { type: 'object' } },
+            { name: 'list_notes', description: 'List all markdown notes.', inputSchema: { type: 'object' } },
             { name: 'read_note', description: 'Read a note content.', inputSchema: { type: 'object', properties: { path: { type: 'string' } } } },
-            { name: 'search_notes', description: 'Fast search keyword in vault.', inputSchema: { type: 'object', properties: { query: { type: 'string' } } } },
-            { name: 'write_note', description: 'Write a note with standard date-based organization.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } } } }
+            { name: 'write_note', description: 'Write a note (Date-based).', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } } } },
+            { name: 'search_notes', description: 'Fast parallel search.', inputSchema: { type: 'object', properties: { query: { type: 'string' } } } }
           ]
         });
-
       case 'tools/call':
         const { name, arguments: args } = params;
         const result = await handleTool(name, args);
         return send(id, result);
-
       default:
         return send(id, null, { code: -32601, message: 'Method not found' });
     }
@@ -66,28 +56,17 @@ async function handleTool(name, args) {
       if (!full.startsWith(VAULT_PATH)) throw new Error('Access Denied');
       return full;
     };
-
-    if (name === 'list_notes') {
-      const files = await walk(VAULT_PATH);
-      return { content: [{ type: 'text', text: files.join('\n') }] };
-    }
-
-    if (name === 'read_note') {
-      const content = await fs.readFile(getSafePath(args.path), 'utf-8');
-      return { content: [{ type: 'text', text: content }] };
-    }
-
+    if (name === 'list_notes') { return { content: [{ type: 'text', text: (await walk(VAULT_PATH)).join('\n') }] }; }
+    if (name === 'read_note') { return { content: [{ type: 'text', text: await fs.readFile(getSafePath(args.path), 'utf-8') }] }; }
     if (name === 'write_note') {
       const date = new Date().toISOString().split('T')[0];
       const folderPath = path.join(VAULT_PATH, date);
       const fileName = `${args.title}_${date}.md`;
       const full = path.join(folderPath, fileName);
-      
       await fs.mkdir(folderPath, { recursive: true });
       await fs.writeFile(full, args.content, 'utf-8');
       return { content: [{ type: 'text', text: `Success: ${date}/${fileName} created` }] };
     }
-
     if (name === 'search_notes') {
       const query = (args.query || '').toLowerCase();
       const files = await walk(VAULT_PATH);
@@ -105,12 +84,10 @@ async function walk(dir, rel = '') {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     const files = await Promise.all(entries.map(async (e) => {
       if (e.name.startsWith('.') || e.name === 'node_modules') return [];
-      const res = path.join(dir, e.name);
-      const r = path.join(rel, e.name);
-      return e.isDirectory() ? walk(res, r) : (e.name.endsWith('.md') ? r : []);
+      return e.isDirectory() ? walk(path.join(dir, e.name), path.join(rel, e.name)) : (e.name.endsWith('.md') ? path.join(rel, e.name) : []);
     }));
     return files.flat();
   } catch (e) { return []; }
 }
 
-log('Fast Obsidian MCP Server (v1.0.0) Running (Zero-Dep)');
+log('Fast Obsidian MCP Server (v1.0.0) Running');
