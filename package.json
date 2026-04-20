@@ -1,20 +1,13 @@
 {
   "name": "fast-obsidian-mcp",
-  "version": "1.0.0",
-  "description": "High-performance, zero-dependency MCP server for Obsidian with Google Drive sync.",
+  "version": "1.2.0",
+  "description": "Blazing fast, zero-dependency MCP server for Obsidian with web search and sync.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "sync": "powershell -ExecutionPolicy Bypass -File scripts/sync_gdrive.ps1"
+    "sync": "powershell -ExecutionPolicy Bypass -File scripts/sync_gdrive.ps1",
+    "backup-setup": "powershell -ExecutionPolicy Bypass -File scripts/register_backup.ps1"
   },
-  "keywords": [
-    "mcp",
-    "obsidian",
-    "google-drive",
-    "sync",
-    "zero-dependency",
-    "fast"
-  ],
-  "author": "안호영 (An Ho Yong)",
+  "author": "An Ho Yong",
   "license": "Non-Commercial"
 }

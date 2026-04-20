@@ -1,22 +1,25 @@
 # 📝 Release Notes
 
-## 🚀 [v1.1.0] - 2026-04-20 (Mega Update)
-안호영(An Ho Yong) 개발자의 고성능 MCP 서버 대규모 업데이트입니다.
+## 🚀 [v1.2.0] - 2026-04-20 (Web Search & English-First)
+Large update by An Ho Yong for global compatibility and enhanced information gathering.
 
-### ✨ 추가된 신규 기능 (New Tools)
-- **웹 클리퍼 (`web_clip`)**: URL만 입력하면 웹 페이지의 본문을 추출하여 AI가 학습하거나 저장할 수 있습니다.
-- **지능형 노트 연결 (`smart_link`)**: 현재 작성 중인 내용과 연관된 기존 노트들을 분석하여 추천 링크(`[[노트]]`)를 생성합니다.
-- **첨부파일 관리 (`list_assets`)**: 이미지, PDF 등 비마크다운 파일들을 한꺼번에 관리할 수 있습니다.
-- **백업 자동화 스케줄러**: `scripts/register_backup.ps1`을 통해 윈도우 작업 스케줄러에 자동 백업을 등록할 수 있습니다.
+### ✨ New Features
+- **Web Search Tool (`web_search`)**: Search the web directly through the MCP server. No API key required.
+- **English-First Architecture**: All logs, tool descriptions, and source code documentation are now in English for better global AI compatibility.
+- **Enhanced Web Clip**: Improved HTML cleaning for better markdown output.
+- **Better Smart Linking**: Improved algorithm for suggesting internal Obsidian links.
 
-### ⚡ 성능 및 내부 개선
-- **Fetch API 도입**: 외부 라이브러리 없이 순수 Node.js 모듈로 웹 데이터를 가져옵니다.
-- **파일 필터링 최적화**: 미디어 파일과 마크다운 파일을 구분하여 탐색하도록 `walk` 함수를 고도화했습니다.
+### ⚡ Technical Improvements
+- **Zero-Dependency Core**: Still maintains 0 external dependencies for maximum speed.
+- **User-Agent Support**: Added browser-like headers to `fetchUrl` for better web access.
 
 ---
+
+## 🚀 [v1.1.0] - 2026-04-20 (Mega Update)
+- Added Web Clipper, Smart Link, Asset Management, and Auto-backup.
 
 ## 🚀 [v1.0.0] - 2026-04-20 (Initial Release)
-- 초기 정식 버전 출시 (Zero-Dep, 병렬 검색, 날짜별 정리).
+- Initial release by An Ho Yong.
 
 ---
-**Developed by 안호영 (An Ho Yong)**
+**Developed by An Ho Yong**

@@ -1,6 +1,8 @@
 /**
- * Fast Obsidian MCP Server (v1.1.0)
- * Developed by 안호영 (An Ho Yong)
+ * Fast Obsidian MCP Server (v1.2.0)
+ * Developed by An Ho Yong
+ * 
+ * High-performance, zero-dependency MCP server for Obsidian Vault.
  */
 
 const fs = require('fs').promises;
@@ -21,18 +23,25 @@ const log = (msg) => console.error(`[Obsidian-MCP] ${msg}`);
 rl.on('line', async (line) => {
   try {
     const { method, params, id } = JSON.parse(line);
-    if (method === 'initialize') return send(id, { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'fast-obsidian-mcp', version: '1.1.0' } });
+    if (method === 'initialize') return send(id, { 
+      protocolVersion: '2024-11-05', 
+      capabilities: { tools: {} }, 
+      serverInfo: { name: 'fast-obsidian-mcp', version: '1.2.0' } 
+    });
+
     if (method === 'tools/list') return send(id, {
       tools: [
-        { name: 'list_notes', description: '모든 마크다운 노트 목록 조회', inputSchema: { type: 'object' } },
-        { name: 'read_note', description: '노트 내용 읽기', inputSchema: { type: 'object', properties: { path: { type: 'string' } } } },
-        { name: 'write_note', description: '노트 생성/수정 (날짜별 정리)', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } }, required: ["title", "content"] } },
-        { name: 'search_notes', description: '고속 병렬 검색', inputSchema: { type: 'object', properties: { query: { type: 'string' } } } },
-        { name: 'web_clip', description: '웹 페이지 내용을 마크다운으로 추출', inputSchema: { type: 'object', properties: { url: { type: 'string' }, title: { type: 'string' } }, required: ["url"] } },
-        { name: 'smart_link', description: '관련 있는 기존 노트 링크 추천', inputSchema: { type: 'object', properties: { text: { type: 'string' } } } },
-        { name: 'list_assets', description: '이미지 등 첨부파일 목록 조회', inputSchema: { type: 'object' } }
+        { name: 'list_notes', description: 'List all markdown notes in the vault.', inputSchema: { type: 'object' } },
+        { name: 'read_note', description: 'Read content of a specific note.', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ["path"] } },
+        { name: 'write_note', description: 'Create or update a note with date-based folder organization.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } }, required: ["title", "content"] } },
+        { name: 'search_notes', description: 'Blazing fast parallel keyword search across the vault.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
+        { name: 'web_search', description: 'Search the web for information.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
+        { name: 'web_clip', description: 'Extract and clean content from a URL.', inputSchema: { type: 'object', properties: { url: { type: 'string' } }, required: ["url"] } },
+        { name: 'smart_link', description: 'Suggest internal links [[note]] based on content similarity.', inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ["text"] } },
+        { name: 'list_assets', description: 'List non-markdown files (images, PDFs, etc.) in the vault.', inputSchema: { type: 'object' } }
       ]
     });
+
     if (method === 'tools/call') {
       const { name, arguments: args } = params;
       const result = await handleTool(name, args);
@@ -50,6 +59,7 @@ async function handleTool(name, args) {
     };
 
     if (name === 'list_notes') return { content: [{ type: 'text', text: (await walk(VAULT_PATH, '.md')).join('\n') }] };
+    
     if (name === 'read_note') return { content: [{ type: 'text', text: await fs.readFile(getSafePath(args.path), 'utf-8') }] };
     
     if (name === 'write_note') {
@@ -58,7 +68,7 @@ async function handleTool(name, args) {
       const file = path.join(folder, `${args.title}_${date}.md`);
       await fs.mkdir(folder, { recursive: true });
       await fs.writeFile(file, args.content, 'utf-8');
-      return { content: [{ type: 'text', text: `Success: ${date}/${args.title}_${date}.md` }] };
+      return { content: [{ type: 'text', text: `Success: Saved to ${date}/${args.title}_${date}.md` }] };
     }
 
     if (name === 'search_notes') {
@@ -71,17 +81,29 @@ async function handleTool(name, args) {
       return { content: [{ type: 'text', text: JSON.stringify(matches.filter(Boolean), null, 2) }] };
     }
 
+    if (name === 'web_search') {
+      const query = encodeURIComponent(args.query);
+      const html = await fetchUrl(`https://duckduckgo.com/html/?q=${query}`);
+      const results = [];
+      const regex = /<a class="result__a" href="([^"]+)">([^<]+)<\/a>.*?<a class="result__snippet" href="[^"]+">([^<]+)<\/a>/gs;
+      let m;
+      while ((m = regex.exec(html)) !== null && results.length < 5) {
+        results.push({ url: m[1], title: m[2].trim(), snippet: m[3].trim() });
+      }
+      return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+    }
+
     if (name === 'web_clip') {
       const content = await fetchUrl(args.url);
-      const cleanContent = content.replace(/<[^>]*>?/gm, ' ').slice(0, 2000); // Simple HTML to Text
+      const cleanContent = content.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').slice(0, 3000);
       return { content: [{ type: 'text', text: cleanContent }] };
     }
 
     if (name === 'smart_link') {
       const files = await walk(VAULT_PATH, '.md');
-      const keywords = args.text.split(' ').filter(w => w.length > 1).slice(0, 5);
-      const recommendations = files.filter(f => keywords.some(k => f.includes(k))).slice(0, 5);
-      return { content: [{ type: 'text', text: recommendations.map(r => `[[${r.replace('.md', '')}]]`).join('\n') }] };
+      const keywords = args.text.split(' ').filter(w => w.length > 2).slice(0, 5);
+      const recommendations = files.filter(f => keywords.some(k => f.toLowerCase().includes(k.toLowerCase()))).slice(0, 5);
+      return { content: [{ type: 'text', text: recommendations.map(r => `[[${r.replace('.md', '').replace(/\\/g, '/')}]]`).join('\n') }] };
     }
 
     if (name === 'list_assets') {
@@ -111,7 +133,7 @@ async function walk(dir, ext = '', includeAll = false, rel = '') {
 function fetchUrl(url) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https') ? https : http;
-    client.get(url, (res) => {
+    client.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => resolve(data));
@@ -119,4 +141,4 @@ function fetchUrl(url) {
   });
 }
 
-log('Fast Obsidian MCP Server (v1.1.0) Running - Mega Update by An Ho Yong');
+log('Fast Obsidian MCP Server (v1.2.0) Running - English Based - Developed by An Ho Yong');
