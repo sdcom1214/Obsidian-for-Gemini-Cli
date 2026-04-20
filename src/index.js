@@ -1,5 +1,5 @@
 /**
- * Fast Obsidian MCP Server (v1.2.0)
+ * Fast Obsidian MCP Server (v1.2.1)
  * Developed by An Ho Yong
  * 
  * High-performance, zero-dependency MCP server for Obsidian Vault.
@@ -26,14 +26,14 @@ rl.on('line', async (line) => {
     if (method === 'initialize') return send(id, { 
       protocolVersion: '2024-11-05', 
       capabilities: { tools: {} }, 
-      serverInfo: { name: 'fast-obsidian-mcp', version: '1.2.0' } 
+      serverInfo: { name: 'fast-obsidian-mcp', version: '1.2.1' } 
     });
 
     if (method === 'tools/list') return send(id, {
       tools: [
         { name: 'list_notes', description: 'List all markdown notes in the vault.', inputSchema: { type: 'object' } },
         { name: 'read_note', description: 'Read content of a specific note.', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ["path"] } },
-        { name: 'write_note', description: 'Create or update a note with date-based folder organization.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } }, required: ["title", "content"] } },
+        { name: 'write_note', description: 'Create or update a note with "Title_Date.md" format.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } }, required: ["title", "content"] } },
         { name: 'search_notes', description: 'Blazing fast parallel keyword search across the vault.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_search', description: 'Search the web for information.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_clip', description: 'Extract and clean content from a URL.', inputSchema: { type: 'object', properties: { url: { type: 'string' } }, required: ["url"] } },
@@ -59,16 +59,14 @@ async function handleTool(name, args) {
     };
 
     if (name === 'list_notes') return { content: [{ type: 'text', text: (await walk(VAULT_PATH, '.md')).join('\n') }] };
-    
     if (name === 'read_note') return { content: [{ type: 'text', text: await fs.readFile(getSafePath(args.path), 'utf-8') }] };
     
     if (name === 'write_note') {
       const date = new Date().toISOString().split('T')[0];
-      const folder = path.join(VAULT_PATH, date);
-      const file = path.join(folder, `${args.title}_${date}.md`);
-      await fs.mkdir(folder, { recursive: true });
-      await fs.writeFile(file, args.content, 'utf-8');
-      return { content: [{ type: 'text', text: `Success: Saved to ${date}/${args.title}_${date}.md` }] };
+      const fileName = `${args.title}_${date}.md`;
+      const full = path.join(VAULT_PATH, fileName);
+      await fs.writeFile(full, args.content, 'utf-8');
+      return { content: [{ type: 'text', text: `Success: Saved as ${fileName}` }] };
     }
 
     if (name === 'search_notes') {
@@ -141,4 +139,4 @@ function fetchUrl(url) {
   });
 }
 
-log('Fast Obsidian MCP Server (v1.2.0) Running - English Based - Developed by An Ho Yong');
+log('Fast Obsidian MCP Server (v1.2.1) Running - Standardized File Naming - Developed by An Ho Yong');
