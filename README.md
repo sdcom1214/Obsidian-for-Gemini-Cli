@@ -68,7 +68,7 @@ npm run sync
 ```
 
 ## ?“„ License
-MIT License. Feel free to use and contribute!
+Non-Commercial License. Duplication and modification are allowed, but **commercial sale is strictly prohibited**.
 
 ---
 Developed by **?ˆí˜¸??(An Ho Yong)**

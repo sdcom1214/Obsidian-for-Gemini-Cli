@@ -1,21 +1,23 @@
-MIT License
+# 📜 비상업적 이용 라이선스 (Non-Commercial License)
 
-Copyright (c) 2026 An Ho Young
+Copyright (c) 2026 안호영 (An Ho Yong)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+본 소프트웨어는 다음 조건 하에 개인적, 비상업적 용도로 사용하는 것을 허용합니다:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. **복제 및 수정 허용**: 사용자는 본 소프트웨어를 자유롭게 복제하고 자신의 필요에 맞게 수정할 수 있습니다.
+2. **배포 허용**: 수정되거나 원본인 소프트웨어를 타인에게 무료로 배포할 수 있습니다. 단, 이 라이선스 고지 사항을 반드시 포함해야 합니다.
+3. **상업적 판매 금지 (Strictly Non-Commercial)**: 본 소프트웨어 또는 그 수정본을 판매하거나, 이를 이용하여 수익을 창출하는 모든 행위는 엄격히 금지됩니다. 
+4. **보증 부인**: 본 소프트웨어는 "있는 그대로" 제공되며, 제작자는 어떠한 보증도 하지 않습니다.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+---
+
+# 📜 Non-Commercial License
+
+Copyright (c) 2026 An Ho Yong
+
+Permission is hereby granted, for non-commercial personal use only, subject to the following conditions:
+
+1. **Duplication & Modification**: You are free to copy and modify this software for personal use.
+2. **Redistribution**: You may redistribute the software free of charge, provided that this license notice is included.
+3. **No Commercial Sale**: Selling this software or any modified version of it, or using it for any commercial profit-making purpose, is strictly prohibited.
+4. **No Warranty**: The software is provided "as is", without warranty of any kind.
