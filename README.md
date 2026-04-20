@@ -66,3 +66,10 @@ MIT License. Feel free to use and contribute!
 
 ---
 Developed by **¾ÈÈ£¿µ (An Ho Yong)**
+
+## ? Quick Install via Gemini CLI (Magic Prompt)
+
+Just copy and paste the prompt below into your **Gemini CLI**. It will automatically set up the entire project for you!
+
+> **\"Hey Gemini, install the 'Fast Obsidian MCP' server for me. Create all files in C:\Users\%USERNAME%\fast-obsidian-mcp, and register it as 'obsidian' in my .gemini/settings.json. My vault path is C:\Gemini Project.\"**
+

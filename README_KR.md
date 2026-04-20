@@ -64,3 +64,10 @@ MIT License. ?먯쑀濡?쾶 ?섏젙?섍퀬 諛고룷?섏떎 ???덉뒿?덈떎!
 
 ---
 Developed by **안호영 (An Ho Yong)**
+
+## ? Gemini CLI를 통한 초고속 설치 (매직 프롬프트)
+
+아래의 프롬프트 문구만 복사해서 **Gemini CLI**에 붙여넣으세요. 자동으로 모든 설치와 설정이 완료됩니다!
+
+> **\"안녕 Gemini, 'Fast Obsidian MCP' 서버를 설치해줘. 모든 파일은 C:\Users\%USERNAME%\fast-obsidian-mcp 폴더에 만들고, 내 .gemini/settings.json에 'obsidian' 서버로 등록해줘. 내 옵시디언 보관소 경로는 C:\Gemini Project야.\"**
+
