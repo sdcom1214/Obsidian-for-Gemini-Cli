@@ -11,6 +11,7 @@ It lets AI clients interact with your local vault through MCP tools.
 Use these docs for quick setup:
 - [INSTALL_CODEX_GEMINI.md](./INSTALL_CODEX_GEMINI.md)
 - [INSTALL_PROMPTS_CODEX_GEMINI.md](./INSTALL_PROMPTS_CODEX_GEMINI.md)
+- [AUTO_INSTALL_PROMPTS.md](./AUTO_INSTALL_PROMPTS.md)
 
 Quick config examples:
 
@@ -36,6 +37,10 @@ env = { OBSIDIAN_VAULT_PATH = 'C:\Gemini Project' }
   }
 }
 ```
+
+## One-Click Auto Install
+If you want fully guided setup (clone -> ask vault path -> register `OBSIDIAN_VAULT_PATH` -> verify), use:
+- [AUTO_INSTALL_PROMPTS.md](./AUTO_INSTALL_PROMPTS.md)
 
 ## Features
 - Zero dependency: no `npm install` required
