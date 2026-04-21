@@ -1,9 +1,9 @@
 /**
- * Fast Obsidian MCP Server (v1.4.0)
+ * Fast Obsidian MCP Server (v1.5.0)
  * Developed by An Ho Yong
  * 
  * High-performance, zero-dependency MCP server for Obsidian Vault.
- * Production-ready with 'get_recommendations' AI engine.
+ * v1.5.0 "Intelligence Search" Update: Weighted scoring & Contextual snippets.
  */
 
 const fs = require('fs').promises;
@@ -28,7 +28,7 @@ rl.on('line', async (line) => {
     if (method === 'initialize') return send(id, { 
       protocolVersion: '2024-11-05', 
       capabilities: { tools: {} }, 
-      serverInfo: { name: 'fast-obsidian-mcp', version: '1.4.0' } 
+      serverInfo: { name: 'fast-obsidian-mcp', version: '1.5.0' } 
     });
 
     if (method === 'tools/list') return send(id, {
@@ -37,12 +37,12 @@ rl.on('line', async (line) => {
         { name: 'read_note', description: 'Read content of a specific note.', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ["path"] } },
         { name: 'write_note', description: 'Create a note with "Title_Date.md" format.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } }, required: ["title", "content"] } },
         { name: 'update_note', description: 'Update or create a note at a specific path.', inputSchema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ["path", "content"] } },
-        { name: 'organize_notes_by_date', description: 'Safely move .md files in the root to date-based folders.', inputSchema: { type: 'object' } },
-        { name: 'get_recommendations', description: 'AI suggests next topics to write about or notes to link based on vault content.', inputSchema: { type: 'object' } },
-        { name: 'search_notes', description: 'Blazing fast parallel keyword search.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
+        { name: 'organize_notes_by_date', description: 'Safely move root notes to date folders.', inputSchema: { type: 'object' } },
+        { name: 'get_recommendations', description: 'AI suggests next topics based on content.', inputSchema: { type: 'object' } },
+        { name: 'search_notes', description: 'High-performance weighted search with contextual snippets.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_search', description: 'Search the web for information.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
-        { name: 'web_clip', description: 'Extract and clean content from a URL.', inputSchema: { type: 'object', properties: { url: { type: 'string' } }, required: ["url"] } },
-        { name: 'smart_link', description: 'Suggest internal links based on content.', inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ["text"] } },
+        { name: 'web_clip', description: 'Extract text from a URL.', inputSchema: { type: 'object', properties: { url: { type: 'string' } }, required: ["url"] } },
+        { name: 'smart_link', description: 'Suggest internal links based on similarity.', inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ["text"] } },
         { name: 'list_assets', description: 'List non-markdown files.', inputSchema: { type: 'object' } }
       ]
     });
@@ -111,15 +111,58 @@ async function handleTool(name, args) {
     }
 
     if (name === 'search_notes') {
-      const q = requireString(safeArgs.query, 'query').toLowerCase();
+      const query = requireString(safeArgs.query, 'query').toLowerCase();
+      const keywords = query.split(/\s+/).filter(k => k.length > 0);
       const files = await walk(VAULT_PATH, '.md');
-      const matches = await Promise.all(files.map(async (f) => {
+      
+      const results = await Promise.all(files.map(async (f) => {
         try {
-          const c = await fs.readFile(path.join(VAULT_PATH, f), 'utf-8');
-          return c.toLowerCase().includes(q) ? { path: f, preview: c.slice(0, 60).replace(/\n/g, ' ') + '...' } : null;
+          const content = await fs.readFile(path.join(VAULT_PATH, f), 'utf-8');
+          const lowerContent = content.toLowerCase();
+          const lowerPath = f.toLowerCase();
+          
+          let score = 0;
+          let firstMatchIndex = -1;
+
+          for (const kw of keywords) {
+            // 제목 가중치 (10점)
+            if (lowerPath.includes(kw)) score += 10;
+            
+            // 본문 빈도 가중치 (1점 per match)
+            let pos = lowerContent.indexOf(kw);
+            while (pos !== -1) {
+              score += 1;
+              if (firstMatchIndex === -1) firstMatchIndex = pos;
+              pos = lowerContent.indexOf(kw, pos + 1);
+            }
+          }
+
+          if (score > 0) {
+            // 지능형 스니펫 추출: 검색어 주변 40자 추출
+            let snippet = "";
+            if (firstMatchIndex !== -1) {
+              const start = Math.max(0, firstMatchIndex - 40);
+              const end = Math.min(content.length, firstMatchIndex + 80);
+              snippet = (start > 0 ? "..." : "") + 
+                        content.slice(start, end).replace(/\n/g, ' ') + 
+                        (end < content.length ? "..." : "");
+            } else {
+              snippet = content.slice(0, 100).replace(/\n/g, ' ') + "...";
+            }
+
+            return { path: f, score, preview: snippet };
+          }
+          return null;
         } catch (e) { return null; }
       }));
-      return { content: [{ type: 'text', text: JSON.stringify(matches.filter(Boolean), null, 2) }] };
+
+      // 스코어 순 정렬 (높은 점수가 위로)
+      const rankedResults = results
+        .filter(Boolean)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 15); // 상위 15개만 반환
+
+      return { content: [{ type: 'text', text: JSON.stringify(rankedResults, null, 2) }] };
     }
 
     if (name === 'web_search') {
@@ -200,4 +243,4 @@ function sanitizeTitle(title) {
   return title.replace(/[<>:"/\\|?*\u0000-\u001F]/g, ' ').trim().slice(0, 100);
 }
 
-log(`Fast Obsidian MCP Server (v1.4.0) Running - AI Recommendations Ready`);
+log(`Fast Obsidian MCP Server (v1.5.0) Running - Intelligence Search Activated`);
