@@ -1,12 +1,13 @@
 /**
- * Fast Obsidian MCP Server (v1.2.2)
+ * Fast Obsidian MCP Server (v1.3.0)
  * Developed by An Ho Yong
  * 
  * High-performance, zero-dependency MCP server for Obsidian Vault.
- * Now with enhanced safety and 'update_note' support.
+ * Now with 'update_note' and 'organize_notes_by_date' support.
  */
 
 const fs = require('fs').promises;
+const fsNative = require('fs');
 const path = require('path');
 const readline = require('readline');
 const http = require('http');
@@ -27,7 +28,7 @@ rl.on('line', async (line) => {
     if (method === 'initialize') return send(id, { 
       protocolVersion: '2024-11-05', 
       capabilities: { tools: {} }, 
-      serverInfo: { name: 'fast-obsidian-mcp', version: '1.2.2' } 
+      serverInfo: { name: 'fast-obsidian-mcp', version: '1.3.0' } 
     });
 
     if (method === 'tools/list') return send(id, {
@@ -36,6 +37,7 @@ rl.on('line', async (line) => {
         { name: 'read_note', description: 'Read content of a specific note.', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ["path"] } },
         { name: 'write_note', description: 'Create a note with "Title_Date.md" format.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } }, required: ["title", "content"] } },
         { name: 'update_note', description: 'Update or create a note at a specific path (e.g., "JP.md").', inputSchema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ["path", "content"] } },
+        { name: 'organize_notes_by_date', description: 'Automatically move .md files in the root to date-based folders (YYYY-MM-DD).', inputSchema: { type: 'object' } },
         { name: 'search_notes', description: 'Blazing fast parallel keyword search across the vault.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_search', description: 'Search the web for information.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_clip', description: 'Extract and clean content from a URL.', inputSchema: { type: 'object', properties: { url: { type: 'string' } }, required: ["url"] } },
@@ -79,6 +81,28 @@ async function handleTool(name, args) {
       const full = getSafePath(p);
       await fs.writeFile(full, content, 'utf-8');
       return { content: [{ type: 'text', text: `Success: Updated ${p}` }] };
+    }
+
+    if (name === 'organize_notes_by_date') {
+      const entries = await fs.readdir(VAULT_PATH, { withFileTypes: true });
+      let movedCount = 0;
+      for (const entry of entries) {
+        if (entry.isFile() && entry.name.endsWith('.md')) {
+          const oldPath = path.join(VAULT_PATH, entry.name);
+          const stats = await fs.stat(oldPath);
+          const dateStr = stats.mtime.toISOString().split('T')[0]; // YYYY-MM-DD
+          const targetDir = path.join(VAULT_PATH, dateStr);
+          
+          if (!fsNative.existsSync(targetDir)) {
+            await fs.mkdir(targetDir, { recursive: true });
+          }
+          
+          const newPath = path.join(targetDir, entry.name);
+          await fs.rename(oldPath, newPath);
+          movedCount++;
+        }
+      }
+      return { content: [{ type: 'text', text: `Success: Organized ${movedCount} notes into date-based folders.` }] };
     }
 
     if (name === 'search_notes') {
@@ -171,4 +195,4 @@ function sanitizeTitle(title) {
   return title.replace(/[<>:"/\\|?*\u0000-\u001F]/g, ' ').trim().slice(0, 100);
 }
 
-log(`Fast Obsidian MCP Server (v1.2.2) Running - Vault: ${VAULT_PATH}`);
+log(`Fast Obsidian MCP Server (v1.3.0) Running - Vault: ${VAULT_PATH}`);
