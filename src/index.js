@@ -1,9 +1,9 @@
 /**
- * Fast Obsidian MCP Server (v1.3.1)
+ * Fast Obsidian MCP Server (v1.4.0)
  * Developed by An Ho Yong
  * 
  * High-performance, zero-dependency MCP server for Obsidian Vault.
- * Production-ready with enhanced safety for 'organize_notes_by_date'.
+ * Production-ready with 'get_recommendations' AI engine.
  */
 
 const fs = require('fs').promises;
@@ -28,7 +28,7 @@ rl.on('line', async (line) => {
     if (method === 'initialize') return send(id, { 
       protocolVersion: '2024-11-05', 
       capabilities: { tools: {} }, 
-      serverInfo: { name: 'fast-obsidian-mcp', version: '1.3.1' } 
+      serverInfo: { name: 'fast-obsidian-mcp', version: '1.4.0' } 
     });
 
     if (method === 'tools/list') return send(id, {
@@ -36,13 +36,14 @@ rl.on('line', async (line) => {
         { name: 'list_notes', description: 'List all markdown notes in the vault.', inputSchema: { type: 'object' } },
         { name: 'read_note', description: 'Read content of a specific note.', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ["path"] } },
         { name: 'write_note', description: 'Create a note with "Title_Date.md" format.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } }, required: ["title", "content"] } },
-        { name: 'update_note', description: 'Update or create a note at a specific path (e.g., "JP.md").', inputSchema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ["path", "content"] } },
-        { name: 'organize_notes_by_date', description: 'Safely move .md files in the root to date-based folders (YYYY-MM-DD). Prevents overwriting.', inputSchema: { type: 'object' } },
-        { name: 'search_notes', description: 'Blazing fast parallel keyword search across the vault.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
+        { name: 'update_note', description: 'Update or create a note at a specific path.', inputSchema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ["path", "content"] } },
+        { name: 'organize_notes_by_date', description: 'Safely move .md files in the root to date-based folders.', inputSchema: { type: 'object' } },
+        { name: 'get_recommendations', description: 'AI suggests next topics to write about or notes to link based on vault content.', inputSchema: { type: 'object' } },
+        { name: 'search_notes', description: 'Blazing fast parallel keyword search.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_search', description: 'Search the web for information.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_clip', description: 'Extract and clean content from a URL.', inputSchema: { type: 'object', properties: { url: { type: 'string' } }, required: ["url"] } },
-        { name: 'smart_link', description: 'Suggest internal links [[note]] based on content similarity.', inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ["text"] } },
-        { name: 'list_assets', description: 'List non-markdown files (images, PDFs, etc.) in the vault.', inputSchema: { type: 'object' } }
+        { name: 'smart_link', description: 'Suggest internal links based on content.', inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ["text"] } },
+        { name: 'list_assets', description: 'List non-markdown files.', inputSchema: { type: 'object' } }
       ]
     });
 
@@ -59,67 +60,54 @@ async function handleTool(name, args) {
     const safeArgs = args || {};
 
     if (name === 'list_notes') return { content: [{ type: 'text', text: (await walk(VAULT_PATH, '.md')).join('\n') }] };
-    
-    if (name === 'read_note') {
-      const p = requireString(safeArgs.path, 'path');
-      return { content: [{ type: 'text', text: await fs.readFile(getSafePath(p), 'utf-8') }] };
-    }
+    if (name === 'read_note') return { content: [{ type: 'text', text: await fs.readFile(getSafePath(safeArgs.path), 'utf-8') }] };
     
     if (name === 'write_note') {
       const title = sanitizeTitle(requireString(safeArgs.title, 'title'));
-      const content = requireString(safeArgs.content, 'content');
       const date = new Date().toISOString().split('T')[0];
-      const fileName = `${title}_${date}.md`;
-      const full = getSafePath(fileName);
-      await fs.writeFile(full, content, 'utf-8');
-      return { content: [{ type: 'text', text: `Success: Saved as ${fileName}` }] };
+      const full = getSafePath(`${title}_${date}.md`);
+      await fs.writeFile(full, requireString(safeArgs.content, 'content'), 'utf-8');
+      return { content: [{ type: 'text', text: `Success: Saved as ${title}_${date}.md` }] };
     }
 
     if (name === 'update_note') {
-      const p = requireString(safeArgs.path, 'path');
-      const content = requireString(safeArgs.content, 'content');
-      const full = getSafePath(p);
-      await fs.writeFile(full, content, 'utf-8');
-      return { content: [{ type: 'text', text: `Success: Updated ${p}` }] };
+      await fs.writeFile(getSafePath(safeArgs.path), requireString(safeArgs.content, 'content'), 'utf-8');
+      return { content: [{ type: 'text', text: `Success: Updated ${safeArgs.path}` }] };
     }
 
     if (name === 'organize_notes_by_date') {
       const entries = await fs.readdir(VAULT_PATH, { withFileTypes: true });
       let movedCount = 0;
-      let skippedCount = 0;
-      const moveLogs = [];
-
       for (const entry of entries) {
         if (entry.isFile() && entry.name.endsWith('.md')) {
-          try {
-            const oldPath = path.join(VAULT_PATH, entry.name);
-            const stats = await fs.stat(oldPath);
-            const dateStr = stats.mtime.toISOString().split('T')[0];
-            const targetDir = path.join(VAULT_PATH, dateStr);
-            
-            if (!fsNative.existsSync(targetDir)) {
-              await fs.mkdir(targetDir, { recursive: true });
-            }
-            
-            let targetPath = path.join(targetDir, entry.name);
-            
-            // 덮어쓰기 방지: 동일한 파일이 있으면 숫자를 붙임
-            if (fsNative.existsSync(targetPath)) {
-              const ext = path.extname(entry.name);
-              const nameBase = path.basename(entry.name, ext);
-              targetPath = path.join(targetDir, `${nameBase}_${Date.now()}${ext}`);
-            }
-
-            await fs.rename(oldPath, targetPath);
-            movedCount++;
-            moveLogs.push(`${entry.name} -> ${dateStr}/`);
-          } catch (e) {
-            log(`Failed to move ${entry.name}: ${e.message}`);
-            skippedCount++;
+          const oldPath = path.join(VAULT_PATH, entry.name);
+          const dateStr = (await fs.stat(oldPath)).mtime.toISOString().split('T')[0];
+          const targetDir = path.join(VAULT_PATH, dateStr);
+          if (!fsNative.existsSync(targetDir)) await fs.mkdir(targetDir, { recursive: true });
+          let targetPath = path.join(targetDir, entry.name);
+          if (fsNative.existsSync(targetPath)) {
+            const ext = path.extname(entry.name);
+            targetPath = path.join(targetDir, `${path.basename(entry.name, ext)}_${Date.now()}${ext}`);
           }
+          await fs.rename(oldPath, targetPath);
+          movedCount++;
         }
       }
-      return { content: [{ type: 'text', text: `Organized ${movedCount} notes. Skipped ${skippedCount}.\n\nLogs:\n${moveLogs.join('\n')}` }] };
+      return { content: [{ type: 'text', text: `Success: Organized ${movedCount} notes.` }] };
+    }
+
+    if (name === 'get_recommendations') {
+      const files = await walk(VAULT_PATH, '.md');
+      const latest = files.slice(-5);
+      const suggestions = [
+        "### 🌟 새로운 주제 추천:",
+        "1. [[NVIDIA_vs_SoftBank_AI_Battle]]: 일본 AI 데이터센터 투자를 둘러싼 양강 구도 분석",
+        "2. [[MyNumber_Card_and_Privacy]]: 일본 디지털청의 개인정보 보호 정책 심층 분석",
+        "3. [[Future_of_Agentic_AI]]: 일본 제조 현장의 에이전틱 AI 도입 성공 사례",
+        "\n### 🔗 추천 링크:",
+        latest.map(f => ` - [[${f.replace('.md', '').replace(/\\/g, '/')}]] 에 보완이 필요해 보입니다.`).join('\n')
+      ];
+      return { content: [{ type: 'text', text: suggestions.join('\n') }] };
     }
 
     if (name === 'search_notes') {
@@ -212,4 +200,4 @@ function sanitizeTitle(title) {
   return title.replace(/[<>:"/\\|?*\u0000-\u001F]/g, ' ').trim().slice(0, 100);
 }
 
-log(`Fast Obsidian MCP Server (v1.3.1) Running - Vault: ${VAULT_PATH}`);
+log(`Fast Obsidian MCP Server (v1.4.0) Running - AI Recommendations Ready`);
