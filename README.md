@@ -1,78 +1,73 @@
-﻿# Fast Obsidian MCP Server
+# 🚀 Fast Obsidian MCP Server (v1.4.0)
 ![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-orange.svg)
 ![Node version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen.svg)
-
-High-performance, zero-dependency MCP server for Obsidian.
-It lets AI clients interact with your local vault through MCP tools.
+![MCP version](https://img.shields.io/badge/MCP-1.4.0-blue.svg)
 
 [Korean Guide](./README_KR.md)
 
-## Codex and Gemini Obsidian MCP Guide
-Use these docs for quick setup:
-- [INSTALL_CODEX_GEMINI.md](./INSTALL_CODEX_GEMINI.md)
-- [INSTALL_PROMPTS_CODEX_GEMINI.md](./INSTALL_PROMPTS_CODEX_GEMINI.md)
-- [AUTO_INSTALL_PROMPTS.md](./AUTO_INSTALL_PROMPTS.md)
+High-performance, zero-dependency MCP server for Obsidian.
+Let AI organize your knowledge and suggest new insights directly in your vault.
 
-Quick config examples:
+## ✨ New in v1.4.0
 
-1. Codex (`.codex/config.toml`)
-```toml
-[mcp_servers.obsidian]
-command = "node"
-args = ['C:\Users\<USER>\fast-obsidian-mcp\src\index.js']
-env = { OBSIDIAN_VAULT_PATH = 'C:\Gemini Project' }
+- 🤖 **AI Recommendation Engine (`get_recommendations`)**: AI analyzes your vault to suggest next topics and relevant links.
+- 📅 **Safe Auto-Organization (`organize_notes_by_date`)**: Automatically moves root notes into date-based folders (`YYYY-MM-DD/`) with overwrite protection.
+- 📝 **Precise Path Updates (`update_note`)**: Create or update notes at any specific path within the vault.
+- 🌐 **Master Wiki (`Wiki.md`)**: Support for automated dashboarding to visualize your entire vault structure.
+
+## 🛠️ Installation
+
+### 1. Prerequisites
+- [Node.js](https://nodejs.org/) (v16 or higher)
+
+### 2. Clone Repository
+```bash
+git clone https://github.com/sdcom1214/Obsidian-for-Gemini-Cli.git
+cd Obsidian-for-Gemini-Cli
 ```
 
-2. Gemini (`%USERPROFILE%\.gemini\settings.json`)
+## ⚙️ Configuration
+
+Add the following to your `Gemini CLI` or `Codex` config:
+
+**Gemini (`settings.json`)**
 ```json
 {
   "mcpServers": {
     "obsidian": {
       "command": "node",
-      "args": ["C:/Users/<USER>/fast-obsidian-mcp/src/index.js"],
+      "args": ["C:/path/to/Obsidian-for-Gemini-Cli/src/index.js"],
       "env": {
-        "OBSIDIAN_VAULT_PATH": "C:/Gemini Project"
+        "OBSIDIAN_VAULT_PATH": "C:/Your/Obsidian/Vault"
       }
     }
   }
 }
 ```
 
-## One-Click Auto Install
-If you want fully guided setup (clone -> ask vault path -> register `OBSIDIAN_VAULT_PATH` -> verify), use:
-- [AUTO_INSTALL_PROMPTS.md](./AUTO_INSTALL_PROMPTS.md)
+## 📂 Available Tools (v1.4.0)
 
-## Features
-- Zero dependency: no `npm install` required
-- Fast file operations on markdown notes
-- Web search and web clipping helpers
-- Internal link suggestions for notes
-- Asset listing support
-
-## Installation
-1. Prerequisites
-- [Node.js](https://nodejs.org/) 16+
-- [Rclone](https://rclone.org/) (optional, for cloud sync scripts)
-
-2. Clone
-```bash
-git clone https://github.com/sdcom1214/Obsidian-for-Gemini-Cli.git C:\Users\<USER>\fast-obsidian-mcp
-cd C:\Users\<USER>\fast-obsidian-mcp
-```
-
-## Tools
 | Tool | Description | Input |
 | :--- | :--- | :--- |
-| `list_notes` | List markdown files in the vault | None |
-| `read_note` | Read one note | `path` |
-| `write_note` | Create or update a note | `title`, `content` |
-| `search_notes` | Search notes by keyword | `query` |
-| `web_search` | Search the web | `query` |
-| `web_clip` | Extract text from a URL | `url` |
-| `smart_link` | Suggest `[[note]]` links | `text` |
-| `list_assets` | List non-markdown files | None |
+| `list_notes` | List all markdown notes in the vault | None |
+| `read_note` | Read content of a specific note | `path` |
+| `update_note` | **(NEW)** Create/Update a note at a specific path | `path`, `content` |
+| `organize_notes_by_date` | **(NEW)** Move root notes to date-based folders safely | None |
+| `get_recommendations` | **(NEW)** AI suggests next topics/links based on content | None |
+| `write_note` | Create a note with `Title_Date.md` format | `title`, `content` |
+| `search_notes` | Blazing fast parallel keyword search | `query` |
+| `web_search` | Search the web for real-time info | `query` |
+| `web_clip` | Extract and clean content from a URL | `url` |
+| `smart_link` | Suggest internal links based on similarity | `text` |
+| `list_assets` | List images, PDFs, and other assets | None |
 
-## License
-Non-Commercial License. Sale is strictly prohibited.
+## 🔒 Safety & Reliability
+- **Access Control**: Strictly prevents access outside `OBSIDIAN_VAULT_PATH`.
+- **Data Protection**: Automatically adds timestamps to filenames if a duplicate exists during organization to prevent data loss.
+- **Robustness**: Individual file errors do not crash the entire MCP server.
 
-Developed by An Ho Yong
+## 📄 License
+Non-Commercial License. **Sale or redistribution for commercial purposes is strictly prohibited.**
+
+---
+Developed by **An Ho Yong**
