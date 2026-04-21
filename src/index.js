@@ -1,9 +1,9 @@
 /**
- * Fast Obsidian MCP Server (v1.3.0)
+ * Fast Obsidian MCP Server (v1.3.1)
  * Developed by An Ho Yong
  * 
  * High-performance, zero-dependency MCP server for Obsidian Vault.
- * Now with 'update_note' and 'organize_notes_by_date' support.
+ * Production-ready with enhanced safety for 'organize_notes_by_date'.
  */
 
 const fs = require('fs').promises;
@@ -28,7 +28,7 @@ rl.on('line', async (line) => {
     if (method === 'initialize') return send(id, { 
       protocolVersion: '2024-11-05', 
       capabilities: { tools: {} }, 
-      serverInfo: { name: 'fast-obsidian-mcp', version: '1.3.0' } 
+      serverInfo: { name: 'fast-obsidian-mcp', version: '1.3.1' } 
     });
 
     if (method === 'tools/list') return send(id, {
@@ -37,7 +37,7 @@ rl.on('line', async (line) => {
         { name: 'read_note', description: 'Read content of a specific note.', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ["path"] } },
         { name: 'write_note', description: 'Create a note with "Title_Date.md" format.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } }, required: ["title", "content"] } },
         { name: 'update_note', description: 'Update or create a note at a specific path (e.g., "JP.md").', inputSchema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ["path", "content"] } },
-        { name: 'organize_notes_by_date', description: 'Automatically move .md files in the root to date-based folders (YYYY-MM-DD).', inputSchema: { type: 'object' } },
+        { name: 'organize_notes_by_date', description: 'Safely move .md files in the root to date-based folders (YYYY-MM-DD). Prevents overwriting.', inputSchema: { type: 'object' } },
         { name: 'search_notes', description: 'Blazing fast parallel keyword search across the vault.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_search', description: 'Search the web for information.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ["query"] } },
         { name: 'web_clip', description: 'Extract and clean content from a URL.', inputSchema: { type: 'object', properties: { url: { type: 'string' } }, required: ["url"] } },
@@ -86,23 +86,40 @@ async function handleTool(name, args) {
     if (name === 'organize_notes_by_date') {
       const entries = await fs.readdir(VAULT_PATH, { withFileTypes: true });
       let movedCount = 0;
+      let skippedCount = 0;
+      const moveLogs = [];
+
       for (const entry of entries) {
         if (entry.isFile() && entry.name.endsWith('.md')) {
-          const oldPath = path.join(VAULT_PATH, entry.name);
-          const stats = await fs.stat(oldPath);
-          const dateStr = stats.mtime.toISOString().split('T')[0]; // YYYY-MM-DD
-          const targetDir = path.join(VAULT_PATH, dateStr);
-          
-          if (!fsNative.existsSync(targetDir)) {
-            await fs.mkdir(targetDir, { recursive: true });
+          try {
+            const oldPath = path.join(VAULT_PATH, entry.name);
+            const stats = await fs.stat(oldPath);
+            const dateStr = stats.mtime.toISOString().split('T')[0];
+            const targetDir = path.join(VAULT_PATH, dateStr);
+            
+            if (!fsNative.existsSync(targetDir)) {
+              await fs.mkdir(targetDir, { recursive: true });
+            }
+            
+            let targetPath = path.join(targetDir, entry.name);
+            
+            // 덮어쓰기 방지: 동일한 파일이 있으면 숫자를 붙임
+            if (fsNative.existsSync(targetPath)) {
+              const ext = path.extname(entry.name);
+              const nameBase = path.basename(entry.name, ext);
+              targetPath = path.join(targetDir, `${nameBase}_${Date.now()}${ext}`);
+            }
+
+            await fs.rename(oldPath, targetPath);
+            movedCount++;
+            moveLogs.push(`${entry.name} -> ${dateStr}/`);
+          } catch (e) {
+            log(`Failed to move ${entry.name}: ${e.message}`);
+            skippedCount++;
           }
-          
-          const newPath = path.join(targetDir, entry.name);
-          await fs.rename(oldPath, newPath);
-          movedCount++;
         }
       }
-      return { content: [{ type: 'text', text: `Success: Organized ${movedCount} notes into date-based folders.` }] };
+      return { content: [{ type: 'text', text: `Organized ${movedCount} notes. Skipped ${skippedCount}.\n\nLogs:\n${moveLogs.join('\n')}` }] };
     }
 
     if (name === 'search_notes') {
@@ -195,4 +212,4 @@ function sanitizeTitle(title) {
   return title.replace(/[<>:"/\\|?*\u0000-\u001F]/g, ' ').trim().slice(0, 100);
 }
 
-log(`Fast Obsidian MCP Server (v1.3.0) Running - Vault: ${VAULT_PATH}`);
+log(`Fast Obsidian MCP Server (v1.3.1) Running - Vault: ${VAULT_PATH}`);
