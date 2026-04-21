@@ -1,24 +1,24 @@
-﻿# 🚀 Fast Obsidian MCP Server (v1.5.0)
+# Fast Obsidian MCP Server (v1.7.0)
 ![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-orange.svg)
 ![Node version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen.svg)
-![MCP version](https://img.shields.io/badge/MCP-1.5.0-blue.svg)
+![MCP version](https://img.shields.io/badge/MCP-1.7.0-blue.svg)
 
 [Korean Guide](./README_KO.md)
 
 High-performance, zero-dependency MCP server for Obsidian.
-Find exact knowledge instantly across thousands of notes with the new Intelligence Search engine.
+This version adds safe JavaScript execution and advanced web search query controls.
 
-## ✨ New in v1.5.0: Intelligence Search
+## New in v1.7.0
 
-- 🧠 **Weighted Scoring**: Prioritizes title matches and keyword density to bring the most relevant notes to the top.
-- 💬 **Contextual Snippets**: Automatically extracts the surrounding context of your search terms, making results more readable for both you and the AI.
-- 🤖 **AI Recommendation Engine (`get_recommendations`)**: AI analyzes your vault to suggest next topics and missing links.
-- 📅 **Safe Auto-Organization (`organize_notes_by_date`)**: Automatically moves root notes into date-based folders with overwrite protection.
+- New `js_eval` tool for restricted JavaScript execution with timeout and optional context object.
+- Upgraded `web_search` with `limit`, `site`, `region/lang`, `timeRange`, and `safeSearch` controls.
+- Improved web result parsing for cleaner title/snippet extraction and redirect URL decoding.
+- Existing vault tools remain compatible (`search_notes`, `get_recommendations`, `smart_link`, etc.).
 
-## 🛠️ Installation
+## Installation
 
 ### 1. Prerequisites
-- [Node.js](https://nodejs.org/) (v16 or higher)
+- [Node.js](https://nodejs.org/) v16 or higher
 
 ### 2. Clone Repository
 ```bash
@@ -41,22 +41,52 @@ cd Obsidian-for-Gemini-Cli
 }
 ```
 
-## 📂 Available Tools (v1.5.0)
+## Available Tools (v1.7.0)
 
 | Tool | Description | Highlights |
 | :--- | :--- | :--- |
-| `search_notes` | **(UPGRADED)** High-performance weighted search | Contextual snippet extraction |
-| `get_recommendations` | AI suggests next topics/links | Vault content analysis |
+| `search_notes` | Weighted vault search with phrase support and filters | Snippets, headings, tags, metadata |
+| `get_recommendations` | Analyze vault structure and suggest next links | Latest notes, top tags, orphan detection |
+| `update_note` | Create or update a note at a specific path | Creates nested folders automatically |
 | `organize_notes_by_date` | Move root notes to date folders safely | Overwrite protection |
-| `update_note` | Create/Update a note at a specific path | Precise control |
-| `web_search` / `web_clip` | Real-time web search and extraction | External knowledge integration |
+| `smart_link` | Suggest internal links from note similarity | Keyword overlap scoring |
+| `web_search` / `web_clip` | Real-time web search and extraction | Query filters + external knowledge integration |
+| `js_eval` | Run JavaScript in an isolated VM context | Timeout control + optional variables |
 
-## ⚡ Quick Install for Gemini CLI (Magic Prompt)
+## Search Notes Examples
 
-> **"Hi Gemini, install 'Fast Obsidian MCP' server for me. Clone `https://github.com/sdcom1214/Obsidian-for-Gemini-Cli.git` into `C:\Users\%USERNAME%\fast-obsidian-mcp`, and register it as an 'obsidian' server in my settings. My obsidian vault path is `C:\Gemini Project`."**
+```json
+{ "query": "agent memory" }
+```
 
-## 📄 License
-Non-Commercial License. **Sale or redistribution for commercial purposes is strictly prohibited.**
+```json
+{ "query": "\"project update\" roadmap", "limit": 5, "pathPrefix": "Work/Projects" }
+```
 
----
+## Web Search Example
+
+```json
+{
+  "query": "MCP server best practices",
+  "limit": 5,
+  "site": "modelcontextprotocol.io",
+  "region": "us-en",
+  "timeRange": "month",
+  "safeSearch": true
+}
+```
+
+## JS Eval Example
+
+```json
+{
+  "code": "Math.round((price + tax) * 100) / 100",
+  "context": { "price": 12.345, "tax": 0.99 },
+  "timeoutMs": 300
+}
+```
+
+## License
+Non-Commercial License. Sale or redistribution for commercial purposes is strictly prohibited.
+
 Developed by **An Ho Yong**

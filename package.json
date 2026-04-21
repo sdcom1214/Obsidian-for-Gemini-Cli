@@ -1,7 +1,7 @@
 {
   "name": "fast-obsidian-mcp",
-  "version": "1.2.0",
-  "description": "Blazing fast, zero-dependency MCP server for Obsidian with web search and sync.",
+  "version": "1.7.0",
+  "description": "Blazing fast, zero-dependency MCP server for Obsidian with enhanced search, web query controls, and safe JS eval.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

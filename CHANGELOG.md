@@ -1,25 +1,40 @@
-# 📝 Release Notes
+# Release Notes
 
-## 🚀 [v1.2.0] - 2026-04-20 (Web Search & English-First)
-Large update by An Ho Yong for global compatibility and enhanced information gathering.
+## [v1.7.0] - 2026-04-21 (JS Eval + Web Search Query Upgrade)
 
-### ✨ New Features
-- **Web Search Tool (`web_search`)**: Search the web directly through the MCP server. No API key required.
-- **English-First Architecture**: All logs, tool descriptions, and source code documentation are now in English for better global AI compatibility.
-- **Enhanced Web Clip**: Improved HTML cleaning for better markdown output.
-- **Better Smart Linking**: Improved algorithm for suggesting internal Obsidian links.
+### New Features
+- Added `js_eval` tool with restricted VM execution, timeout control, and optional input context.
+- Enhanced `web_search` arguments with `limit`, `site`, `region/lang`, `timeRange`, and `safeSearch`.
+- Added web search metadata output (`finalQuery`, filters) for easier downstream AI traceability.
 
-### ⚡ Technical Improvements
-- **Zero-Dependency Core**: Still maintains 0 external dependencies for maximum speed.
-- **User-Agent Support**: Added browser-like headers to `fetchUrl` for better web access.
+### Technical Improvements
+- Improved DuckDuckGo result parsing with redirect URL decoding and stronger snippet extraction.
+- Added input sanitization for domain/region/time-range parameters.
+- Added promise timeout handling for async JavaScript evaluation.
 
 ---
 
-## 🚀 [v1.1.0] - 2026-04-20 (Mega Update)
+## [v1.6.0] - 2026-04-21 (Search and Recommendation Upgrade)
+
+### New Features
+- Upgraded `search_notes` with phrase matching, folder filtering, richer ranking, and metadata-rich results.
+- Replaced static `get_recommendations` text with vault-driven analysis for latest notes, orphan notes, top tags, and suggested note pairs.
+- Improved `smart_link` to score both title and content keyword overlap.
+
+### Technical Improvements
+- `update_note` and `write_note` now create parent directories before saving.
+- Added safer vault path validation and HTTP redirect handling.
+- Standardized output for better downstream AI parsing.
+
+---
+
+## [v1.2.0] - 2026-04-20 (Web Search and English-First)
+- Added `web_search`.
+- Improved `web_clip`.
+- Switched logs and source comments to English-first output.
+
+## [v1.1.0] - 2026-04-20 (Mega Update)
 - Added Web Clipper, Smart Link, Asset Management, and Auto-backup.
 
-## 🚀 [v1.0.0] - 2026-04-20 (Initial Release)
-- Initial release by An Ho Yong.
-
----
-**Developed by An Ho Yong**
+## [v1.0.0] - 2026-04-20 (Initial Release)
+- Initial release.
