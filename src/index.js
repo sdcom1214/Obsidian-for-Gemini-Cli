@@ -17,8 +17,8 @@ const vm = require('vm');
 const SERVER_VERSION = '1.7.0';
 const DEFAULT_SEARCH_LIMIT = 10;
 const MAX_SEARCH_LIMIT = 50;
-const DEFAULT_WEB_SEARCH_LIMIT = 5;
-const MAX_WEB_SEARCH_LIMIT = 10;
+const DEFAULT_WEB_SEARCH_LIMIT = 8;
+const MAX_WEB_SEARCH_LIMIT = 20;
 const DEFAULT_JS_TIMEOUT_MS = 400;
 const MAX_JS_TIMEOUT_MS = 2500;
 const VAULT_PATH = path.resolve(process.env.OBSIDIAN_VAULT_PATH || '');
@@ -180,9 +180,8 @@ async function handleTool(name, args) {
 
     if (name === 'web_search') {
       const searchPlan = buildWebSearchPlan(safeArgs);
-      const html = await fetchUrl(searchPlan.url);
-      const results = parseDuckDuckGoResults(html, searchPlan.limit);
-      return { content: [{ type: 'text', text: JSON.stringify({ ...searchPlan.meta, results }, null, 2) }] };
+      const results = await runWebSearch(searchPlan);
+      return { content: [{ type: 'text', text: JSON.stringify({ ...searchPlan.meta, resultCount: results.length, results }, null, 2) }] };
     }
 
     if (name === 'web_clip') {
@@ -555,8 +554,12 @@ function buildWebSearchPlan(args) {
     params.set('df', timeRange);
   }
 
+  const queryString = params.toString();
   return {
-    url: `https://duckduckgo.com/html/?${params.toString()}`,
+    urls: {
+      lite: `https://lite.duckduckgo.com/lite/?${queryString}`,
+      html: `https://duckduckgo.com/html/?${queryString}`
+    },
     limit,
     meta: {
       query,
@@ -570,7 +573,25 @@ function buildWebSearchPlan(args) {
   };
 }
 
-function parseDuckDuckGoResults(html, limit) {
+async function runWebSearch(searchPlan) {
+  const liteHtml = await fetchUrl(searchPlan.urls.lite);
+  let merged = parseDuckDuckGoLiteResults(liteHtml, searchPlan.limit);
+
+  if (merged.length < searchPlan.limit) {
+    const html = await fetchUrl(searchPlan.urls.html);
+    const htmlResults = parseDuckDuckGoHtmlResults(html, searchPlan.limit);
+    merged = dedupeSearchResults([...merged, ...htmlResults]).slice(0, searchPlan.limit);
+
+    if (merged.length < searchPlan.limit) {
+      const fallbackResults = parseGenericAnchorResults(html, searchPlan.limit);
+      merged = dedupeSearchResults([...merged, ...fallbackResults]).slice(0, searchPlan.limit);
+    }
+  }
+
+  return merged.slice(0, searchPlan.limit);
+}
+
+function parseDuckDuckGoHtmlResults(html, limit) {
   const results = [];
   const linkRegex = /<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let match;
@@ -587,6 +608,93 @@ function parseDuckDuckGoResults(html, limit) {
   }
 
   return results;
+}
+
+function parseDuckDuckGoLiteResults(html, limit) {
+  const results = [];
+  const linkRegex = /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+
+  while ((match = linkRegex.exec(html)) !== null && results.length < limit) {
+    const href = decodeHtml(match[1] || '');
+    if (!/\/l\/\?/.test(href) && !/^https?:\/\//i.test(href)) continue;
+
+    const title = decodeHtml(stripHtml(match[2]).trim());
+    const block = html.slice(match.index, Math.min(html.length, match.index + 1200));
+    const snippet = extractLiteSnippet(block);
+    const url = decodeDuckDuckGoUrl(href);
+    if (!title || !url) continue;
+
+    results.push({ url, title, snippet });
+  }
+
+  return dedupeSearchResults(results).slice(0, limit);
+}
+
+function parseGenericAnchorResults(html, limit) {
+  const results = [];
+  const anchorRegex = /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+
+  while ((match = anchorRegex.exec(html)) !== null && results.length < limit * 2) {
+    const url = decodeDuckDuckGoUrl(match[1]);
+    if (!url || !/^https?:\/\//i.test(url)) continue;
+    if (/duckduckgo\.com/i.test(url)) continue;
+
+    const title = decodeHtml(stripHtml(match[2]).trim());
+    if (!title || title.length < 3) continue;
+
+    const block = html.slice(match.index, Math.min(html.length, match.index + 900));
+    const snippet = decodeHtml(stripHtml(block).replace(/\s+/g, ' ').trim()).slice(0, 220);
+    results.push({ url, title, snippet });
+  }
+
+  return dedupeSearchResults(results).slice(0, limit);
+}
+
+function extractLiteSnippet(block) {
+  const cleaned = decodeHtml(stripHtml(block).replace(/\s+/g, ' ').trim());
+  const compact = cleaned.replace(/\s+/g, ' ').trim();
+  if (!compact) return '';
+  return compact.slice(0, 220);
+}
+
+function dedupeSearchResults(results) {
+  const seen = new Set();
+  const output = [];
+
+  for (const item of results) {
+    const url = String(item && item.url ? item.url : '').trim();
+    const title = String(item && item.title ? item.title : '').trim();
+    if (!url || !title) continue;
+
+    const key = normalizeSearchUrl(url);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    output.push({
+      url,
+      title,
+      snippet: String(item.snippet || '').trim()
+    });
+  }
+
+  return output;
+}
+
+function normalizeSearchUrl(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    parsed.hash = '';
+    if (parsed.pathname !== '/') parsed.pathname = parsed.pathname.replace(/\/+$/, '');
+    parsed.searchParams.delete('utm_source');
+    parsed.searchParams.delete('utm_medium');
+    parsed.searchParams.delete('utm_campaign');
+    parsed.searchParams.delete('utm_term');
+    parsed.searchParams.delete('utm_content');
+    return parsed.toString();
+  } catch (e) {
+    return String(rawUrl || '').trim();
+  }
 }
 
 function ensureVaultPath() {
