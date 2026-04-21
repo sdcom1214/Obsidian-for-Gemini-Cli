@@ -3,7 +3,7 @@
 ![Node version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen.svg)
 ![MCP version](https://img.shields.io/badge/MCP-1.4.0-blue.svg)
 
-[English Guide](./README.md) | [Korean Guide](./README_KO.md)
+[English Guide](./README.md)
 
 옵시디언(Obsidian) 보관소를 AI 모델(Claude, Gemini 등)과 직접 연결해주는 **고성능, 제로 디펜던시(Zero-Dependency)** MCP 서버입니다. 이제 AI가 당신의 지식을 스스로 정리하고, 새로운 통찰을 제안하는 똑똑한 보관소를 경험하세요.
 
