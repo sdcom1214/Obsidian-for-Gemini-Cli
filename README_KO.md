@@ -1,4 +1,4 @@
-﻿# 🚀 Fast Obsidian MCP Server (v1.4.0)
+# 🚀 Fast Obsidian MCP Server (v1.4.0)
 ![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-orange.svg)
 ![Node version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen.svg)
 ![MCP version](https://img.shields.io/badge/MCP-1.4.0-blue.svg)
@@ -68,6 +68,12 @@ cd Obsidian-for-Gemini-Cli
 - **엄격한 경로 제어**: `OBSIDIAN_VAULT_PATH`를 벗어난 임의의 파일 접근을 원천 차단합니다.
 - **안전한 파일 이동**: 중복 파일 발생 시 자동 이름 변경 로직을 통해 소중한 데이터를 보호합니다.
 - **무중단 운영**: 개별 파일 처리 중 오류가 발생해도 전체 서버는 중단 없이 안정적으로 동작합니다.
+
+## ⚡ Gemini CLI 전용 빠른 설치 (매직 프롬프트)
+
+아래 프롬프트를 복사하여 Gemini에게 입력하면 **자동으로 설치 및 설정이 완료**됩니다:
+
+> **"안녕 Gemini, 'Fast Obsidian MCP' 서버를 설치해줘. `https://github.com/sdcom1214/Obsidian-for-Gemini-Cli.git`를 `C:\Users\%USERNAME%\fast-obsidian-mcp`에 클론하고, 내 설정에 'obsidian' 서버로 등록해줘. 내 옵시디언 보관소 경로는 `C:\Gemini Project`야. 설치가 끝나면 `get_recommendations`를 실행해서 첫 추천을 해줘."**
 
 ## 📄 라이선스
 비상업적 라이선스 (Non-Commercial). **상업적 목적의 판매 및 재배포는 엄격히 금지**됩니다.

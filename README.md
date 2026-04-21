@@ -66,6 +66,12 @@ Add the following to your `Gemini CLI` or `Codex` config:
 - **Data Protection**: Automatically adds timestamps to filenames if a duplicate exists during organization to prevent data loss.
 - **Robustness**: Individual file errors do not crash the entire MCP server.
 
+## ⚡ Quick Install for Gemini CLI (Magic Prompt)
+
+Copy and paste the following prompt into your Gemini session for **automatic installation**:
+
+> **"Hi Gemini, install 'Fast Obsidian MCP' server for me. Clone `https://github.com/sdcom1214/Obsidian-for-Gemini-Cli.git` into `C:\Users\%USERNAME%\fast-obsidian-mcp`, and register it as an 'obsidian' server in my settings. My obsidian vault path is `C:\Gemini Project`. After installation, run `get_recommendations` and give me the first insights."**
+
 ## 📄 License
 Non-Commercial License. **Sale or redistribution for commercial purposes is strictly prohibited.**
 
